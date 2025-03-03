@@ -1,3 +1,5 @@
+Reading Raw
+
 import os
 import json
 import logging
@@ -59,3 +61,98 @@ def lambda_handler(event: dict, context: dict) -> dict:
   else:
       # Caso tenha dado certo, retorna o status code 200
       return dict(statusCode="200")
+----------------------------------------------------------------------
+Reading Enriched: 
+
+import os
+import json
+import logging
+from datetime import datetime, timedelta, timezone
+import boto3
+import pyarrow as pa
+import pyarrow.parquet as pq
+
+def lambda_handler(event: dict, context: dict) -> bool:
+    """
+    Diariamente é executado para compactar as diversas mensagens, no formato
+    JSON, do dia anterior, armazenadas no bucket de dados cru, em um único
+    arquivo no formato PARQUET, armazenando-o no bucket de dados enriquecidos.
+    """
+
+    # Variáveis de ambiente
+    RAW_BUCKET = os.environ['AWS_S3_BUCKET']
+    ENRICHED_BUCKET = os.environ['AWS_S3_ENRICHED']
+
+    # Variáveis lógicas
+    tzinfo = timezone(offset=timedelta(hours=-3))
+    date = (datetime.now(tzinfo) - timedelta(days=0)).strftime('%Y-%m-%d')
+    timestamp = datetime.now(tzinfo).strftime('%Y%m%d%H%M%S%f')
+
+    # Código principal
+    table = None
+    client = boto3.client('s3')
+
+    try:
+        # Log do caminho gerado
+        logging.info(f"Prefixo usado: telegram/context_date={date}")
+
+        # Listar objetos com o prefixo
+        response = client.list_objects_v2(Bucket=RAW_BUCKET, Prefix=f'telegram/context_date={date}')
+        if 'Contents' not in response or len(response['Contents']) == 0:
+            logging.error(f"Nenhum arquivo encontrado com o prefixo telegram/context_date={date}")
+            return False
+
+        # Processar os arquivos encontrados
+        for content in response['Contents']:
+            key = content['Key']
+            logging.info(f"Encontrado arquivo: {key}")
+
+            # Baixar o arquivo
+            client.download_file(RAW_BUCKET, key, f"/tmp/{key.split('/')[-1]}")
+            with open(f"/tmp/{key.split('/')[-1]}", mode='r', encoding='utf8') as fp:
+                data = json.load(fp)
+                if "message" in data:
+                    data = data["message"]
+                else:
+                    logging.error(f"Mensagem não encontrada no arquivo {key}")
+                    continue
+
+            # Log de dados processados
+            logging.info(f"Dados processados: {data}")
+
+            # Parse dos dados
+            try:
+                parsed_data = parse_data(data=data)
+                iter_table = pa.Table.from_pydict(mapping=parsed_data)
+
+                # Concatenar as tabelas
+                if table:
+                    table = pa.concat_tables([table, iter_table])
+                else:
+                    table = iter_table
+            except Exception as e:
+                logging.error(f"Erro ao processar dados do arquivo {key}: {str(e)}")
+                continue
+
+        # Verificar se a tabela foi gerada corretamente
+        if table:
+            pq.write_table(table=table, where=f'/tmp/{timestamp}.parquet')
+            logging.info(f"Arquivo Parquet gerado: /tmp/{timestamp}.parquet")
+        else:
+            logging.error("Nenhum dado processado, a tabela Parquet não foi gerada.")
+            return False
+
+        # Verificar se o arquivo Parquet existe antes de tentar o upload
+        if os.path.exists(f"/tmp/{timestamp}.parquet"):
+            logging.info(f"Enviando arquivo Parquet para o S3: {timestamp}.parquet")
+            client.upload_file(f"/tmp/{timestamp}.parquet", ENRICHED_BUCKET, f"telegram/context_date={date}/{timestamp}.parquet")
+            logging.info(f"Arquivo Parquet enviado com sucesso para {ENRICHED_BUCKET}")
+        else:
+            logging.error(f"Arquivo Parquet não encontrado: /tmp/{timestamp}.parquet")
+            return False
+
+        return True
+
+    except Exception as exc:
+        logging.error(f"Erro geral: {exc}")
+        return False
