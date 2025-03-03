@@ -1,3 +1,9 @@
+# API Telegram
+
+a documentação da API do Telegram, utilizaremos o método getUpdates que retornará as mensagens captadas pelo bot, esas mensagens ficamam armazenadas nos servidores do Telegram pelo período de 24h. Segue um exemplo do uso e do retorno abaixo:
+
+> Para mais informação sobre a API do Telegram, a documentação pode ser encontrada nesse link.
+
 {
   "ok": true,  // Indica se a requisição à API foi bem-sucedida.
   "result": [  // Lista contendo as atualizações.
