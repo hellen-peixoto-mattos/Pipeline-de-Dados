@@ -1,0 +1,26 @@
+{
+  "ok": true,  // Indica se a requisição à API foi bem-sucedida.
+  "result": [  // Lista contendo as atualizações.
+    {
+      "update_id": 596851175,  // ID único da atualização.
+      "message": {
+        "message_id": 13,
+        "from": {  // Informações sobre o remetente da mensagem.
+          "id": 6428177482,  // ID único do usuário que enviou a mensagem.
+          "is_bot": false,
+          "first_name": "Hellen",  // Primeiro nome do usuário.
+          "last_name": "Mattos",  // Sobrenome do usuário.
+          "language_code": "pt-br"
+        },
+        "chat": {
+          "id": 6428177482,  // ID do chat.
+          "first_name": "Hellen",
+          "last_name": "Mattos",
+          "type": "supergroup"
+        },
+        "date": 1739030915,  // Timestamp Unix (Epoch) indicando quando a mensagem foi enviada.
+        "text": "Teste"  // Conteúdo da mensagem.
+      }
+    }
+  ]
+}
