@@ -2,7 +2,7 @@
 ## Prólogo
 Este projeto tem como objetivo desenvolver um pipeline de dados eficiente para coletar informações dos chats de um grupo no Telegram, processá-las por meio de um fluxo de Extração, Transformação e Carga.
 
-Para isso, utilizamos a linguagem Python e a infraestrutura de computação em nuvem da AWS, integrando serviços como S3, Athena e Lambda, entre outros.
+Para isso, utilizamos a linguagem Python e a infraestrutura de computação em nuvem da AWS, integrando serviços como S3, Athena, Lambda, API Gateway e Event Bridge.
 
 * **Arquitetura:**
 
