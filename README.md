@@ -4,6 +4,8 @@ Este projeto tem como objetivo desenvolver um pipeline de dados eficiente para c
 
 Para isso, utilizamos a linguagem **Python** e a infraestrutura de computação em nuvem da AWS, integrando serviços como **S3**, **Athena**, **Lambda**, **API Gateway** e **Event Bridge**.
 
+O projeto está estruturado em tópicos para proporcionar uma leitura clara e intuitiva, com imagens e explicações detalhadas de cada etapa.
+
 * **Arquitetura:**
 
 ![Descrição da Imagem](https://github.com/user-attachments/assets/c0681437-b8a3-42ad-a489-9c03118fc2e4)
